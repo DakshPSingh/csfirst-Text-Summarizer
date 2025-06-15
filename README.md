@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Text Analysis Web Application
 
 A Flask-based web application that provides text analysis features including summarization, sentiment analysis, and word statistics.
@@ -73,3 +74,6 @@ A Flask-based web application that provides text analysis features including sum
 ## License
 
 This project is open source and available under the [MIT License](LICENSE).
+=======
+# csfirst-text-summarizer
+>>>>>>> bca8dc27f94ff17193af608b55605adbc146ea72
