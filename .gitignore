@@ -1,0 +1,28 @@
+# Python cache and bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# macOS Finder metadata
+*.DS_Store
+
+# Environment files
+.env
+venv/
+
+# NLTK data (downloaded at runtime/build)
+nltk_data/
+
+# Generated chart image
+static/word_stats.png
+
+# IDE/editor folders
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Pytest cache
+.pytest_cache/

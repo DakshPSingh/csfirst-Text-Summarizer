@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>csfirst Text Summarizer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #121212 0%, #181a20 100%);
+            font-family: 'Inter', 'Poppins', 'Roboto', sans-serif;
+        }
+        .majestic-heading {
+            text-shadow: 0 0 18px #00e6ff, 0 0 32px #ff3cac;
+        }
+        .glass {
+            background: rgba(32, 34, 44, 0.72);
+            box-shadow: 0 8px 40px 0 #00e6ff33, 0 1.5px 8px 0 #ff3cac22;
+            border-radius: 2rem;
+            border: 1.5px solid #23293d;
+        }
+        .glow-card {
+            box-shadow: 0 0 24px 2px #00e6ff88, 0 0 10px 2px #ff3cac55;
+            border-radius: 1.5rem;
+        }
+        .glow-btn {
+            background: linear-gradient(90deg, #00e6ff 0%, #ff3cac 100%);
+            color: #fff;
+            box-shadow: 0 0 18px 2px #00e6ff88, 0 0 10px 2px #ff3cac55;
+            border: none;
+            transition: transform 0.14s, box-shadow 0.14s;
+        }
+        .glow-btn:hover, .glow-btn:focus {
+            transform: scale(1.045);
+            box-shadow: 0 0 36px 8px #00e6ffcc, 0 0 20px 6px #ff3cac88;
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: 0.4s;
+        }
+        input:checked + .slider {
+            background-color: #00e6ff;
+        }
+        input:focus + .slider {
+            box-shadow: 0 0 1px #00e6ff;
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        .slider.round {
+            border-radius: 34px;
+        }
+        .slider.round:before {
+            border-radius: 50%;
+        }
+        .loading-spinner {
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #3498db;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 2s linear infinite;
+        }
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen justify-center items-center">
+    <div class="w-full max-w-2xl mx-auto p-8 mt-12 mb-8 glass border border-white border-opacity-30">
+        <h1 class="text-5xl md:text-7xl font-extrabold text-center mb-12 tracking-tight drop-shadow-lg text-white" style="font-family: 'Poppins', 'Inter', sans-serif;">csfirst Text Summarizer</h1>
+        <form method="POST" enctype="multipart/form-data" class="space-y-8" id="summarize-form" autocomplete="off">
+            <div>
+                <label for="original_text" class="block text-lg font-semibold text-white mb-2">Enter your text</label>
+                <textarea id="original_text" name="original_text" rows="8" class="w-full p-6 rounded-3xl border-none bg-[#23293d] text-white placeholder-gray-400 focus:ring-4 focus:ring-cyan-400 focus:outline-none shadow-2xl resize-none text-xl font-medium transition-all duration-150" placeholder="Paste or type your text here...">{{ original_text }}</textarea>
+                <div class="mt-4">
+                    <label for="upload_file" class="block text-white font-semibold mb-2">Upload .txt File</label>
+                    <input type="file" id="upload_file" name="upload_file" accept=".txt" class="block w-full text-white bg-[#23293d] rounded-xl p-2 border border-cyan-400 focus:ring-2 focus:ring-cyan-400" />
+                </div>
+            </div>
+            <div class="flex flex-col md:flex-row md:items-center md:space-x-8 space-y-4 md:space-y-0">
+                <div>
+                    <label for="summary_length" class="block text-white font-semibold mb-2">Summary Length (sentences)</label>
+                    <input type="number" id="summary_length" name="summary_length" min="1" step="1" value="{{ summary_length }}" class="rounded-xl p-4 bg-[#23293d] text-white shadow-md focus:ring-2 focus:ring-cyan-400 w-32 text-lg font-bold transition-all duration-150" required>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <label class="text-white font-semibold flex items-center cursor-pointer">
+                        <span class="mr-2">Sentiment</span>
+                        <span class="toggle-switch">
+                            <input type="checkbox" id="enable_sentiment" name="enable_sentiment" {% if request.form.get('enable_sentiment') == 'on' %}checked{% endif %}>
+                            <span class="slider round"></span>
+                        </span>
+                    </label>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <label class="text-white font-semibold flex items-center cursor-pointer">
+                        <span class="mr-2">Word Chart</span>
+                        <span class="toggle-switch">
+                            <input type="checkbox" id="show_chart" name="show_chart" {% if request.form.get('show_chart') == 'on' %}checked{% endif %}>
+                            <span class="slider round"></span>
+                        </span>
+                    </label>
+                </div>
+            </div>
+            <button type="submit" class="w-full py-5 text-2xl font-bold glow-btn rounded-2xl mt-2 transition-all">Summarize</button>
+            <div id="loading-indicator" style="display:none;"><div class="loading-spinner"></div></div>
+        </form>
+        {% if summary %}
+        <div class="mt-12 glow-card bg-[#181a20] border-2 border-cyan-600/30 p-8 fade-in">
+            <h2 class="text-3xl font-bold mb-4 text-cyan-400" style="font-family: 'Poppins', 'Inter', sans-serif;">Summary</h2>
+            <textarea id="editable_summary" name="editable_summary" rows="7" class="w-full p-5 rounded-xl border-none bg-[#23293d] text-white shadow-inner resize-vertical text-xl font-medium" style="min-height: 120px;">{{ summary }}</textarea>
+        </div>
+        {% endif %}
+        {% if sentiment %}
+        <div class="mt-10 fade-in">
+            <span class="sentiment-badge bg-[#23293d] text-white border border-white">
+                {% if sentiment == 'Positive' %}😊 Positive{% elif sentiment == 'Negative' %}😞 Negative{% else %}😐 Neutral{% endif %}
+            </span>
+            {% if sentiment_keywords and sentiment_keywords|length > 0 %}
+            <div class="flex flex-wrap gap-2 mt-2">
+                {% for kw in sentiment_keywords %}
+                    <span class="px-3 py-1 rounded-full bg-cyan-900 text-cyan-300 font-semibold text-lg shadow-sm border border-cyan-400">{{ kw }}</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+        {% if chart_generated %}
+        <div class="mt-10 chart-card fade-in flex justify-center">
+            <img src="{{ url_for('static', filename='word_stats.png') }}?t={{ range(1000)|random }}" alt="Word Count Chart" class="rounded-xl shadow-xl border-2 border-cyan-600 bg-[#23293d]" style="max-width: 90%; max-height: 340px;">
+        </div>
+        {% endif %}
+    </div>
+    <footer class="w-full text-center py-8 mt-8 text-white text-opacity-90 text-lg font-medium select-none" style="font-family: 'Playfair Display', serif; letter-spacing: 0.05em;">
+        &copy; 2025 Majestic Text Summarizer &mdash; Crafted for Excellence
+    </footer>
+    <footer class="footer">
+        Built by Daksh Singh using Windsurf AI
+    </footer>
+    <script>
+        // Show loading spinner on submit
+        const form = document.getElementById('summarize-form');
+        const loading = document.getElementById('loading-indicator');
+        if(form && loading) {
+            form.addEventListener('submit', function() {
+                loading.style.display = 'block';
+            });
+        }
+    </script>
+</body>
+</html>
